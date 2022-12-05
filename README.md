@@ -1,2 +1,2 @@
 # physics
-Here I upload codes of physical phenomena
+Here I upload codes about different physical phenomena
