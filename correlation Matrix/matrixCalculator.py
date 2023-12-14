@@ -1,9 +1,9 @@
 import sympy as sp
-import numpy as np
 from matrixGenerator import cVec
 from constant import N
 
 # import operator relations and define them
+from sympy.matrices import zeros
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum import pauli, Dagger, Commutator
 from sympy.physics.quantum.operatorordering import normal_ordered_form
@@ -29,7 +29,7 @@ sd = pauli.SigmaMinus()      # sd = sPlus = Dagger(sigma)
 s = pauli.SigmaPlus()      # s = sMinus = sigma
 
 # Define J-C Hamiltonian
-HJC = sp.I * (ad * s + a * sd)       # sympy.I = √ (-1) = i
+HJC = ad * s + a * sd       # sympy.I = √ (-1) = i
 
 preResult = []
 for i in range(len(cVec)):
@@ -37,7 +37,8 @@ for i in range(len(cVec)):
     eta = Commutator(HJC, cVec[i])
     preResult.append(normal_ordered_form(eta.doit().expand()))       # eta in the (separated) expanded form
 
-print(preResult)
+# ==============================================================
+# Stage I: cleaning the correlation matrix of all unwanted terms
 
 newList = []
 for i in range(len(cVec)):
@@ -46,29 +47,46 @@ for i in range(len(cVec)):
     for j in range(len(preResult[i].args)):
 
         newElement = newElement + preResult[i].args[j]
+        createdElement = 1
         for k in range(len(preResult[i].args[j].args)):
 
-            if preResult[i].args[j].args[k] == a**2 or preResult[i].args[j].args[k] == Dagger(a)**2:
+            createdElement = createdElement * preResult[i].args[j].args[k]
+            if preResult[i].args[j].args[k] == a**N or preResult[i].args[j].args[k] == Dagger(a)**N:
 
                 newElement = newElement - preResult[i].args[j]
                 break
 
+            # These two if-clauses are Hamiltonian dependent: REMEMBER
+            # HJC = sp.I * (ad * sd * s * sd + a * s * sd * s) & Commutator(HJC, a * s)
+            if preResult[i].args[j].args[k] == sd and len(preResult[i].args[j].args)-k == 3:
+
+                newElement = newElement - preResult[i].args[j] + createdElement
+                break
+
+            elif preResult[i].args[j].args[k] == s and len(preResult[i].args[j].args)-k == 3:
+
+                newElement = newElement - preResult[i].args[j] + createdElement
+                break
+
     newList.append(newElement)
 
-print(newList)
-# print(etaSep.simplify())
-# etaSep.args[1] = 0
-# print(etaSep.args[1].args)
-# print(len(etaSep.args[1].args))
-# print(etaSep.args[1].args[5])
+result = newList
 
-# result = sp.Mul(etaSep * a)
-# print(etaSep)
-# print(sp.srepr(etaSep))
-# print(result.doit())
-# print(normal_ordered_form(result.doit().expand()))
-# complete form: pauli.qsimplify_pauli(normal_ordered_form(eta.doit().expand()))
-# new = normal_ordered_form(eta.doit().expand())
+# print(preResult)
+# print(result)
 
-# print(new.args[1])
-# print(np.real(np.absolute(new.args[1])))
+# ==================================================
+# Stage II: Calculating W
+
+W = zeros(N**2, N**2)
+
+for i in range(len(result)):
+
+    for j in range(len(result[i].args)):
+
+        print(result[i].args[j].args)
+        for k in range(len(cVec)):
+
+            if abs(result[i].args[j]) == abs(cVec[k]):
+
+                print(True)
