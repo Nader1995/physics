@@ -1,4 +1,3 @@
-
 import sympy as sp
 from constant import N
 

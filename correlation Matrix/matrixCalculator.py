@@ -1,3 +1,4 @@
+import time
 import sympy as sp
 from matrixGenerator import cVec
 from constant import N
@@ -39,7 +40,7 @@ for i in range(len(cVec)):
 
 # ==============================================================
 # Stage I: cleaning the correlation matrix of all unwanted terms
-
+start = time.time()
 newList = []
 for i in range(len(cVec)):
 
@@ -71,22 +72,25 @@ for i in range(len(cVec)):
     newList.append(newElement)
 
 result = newList
-
-# print(preResult)
-# print(result)
+end = time.time()
+polishTime = end - start
 
 # ==================================================
 # Stage II: Calculating W
 
-W = zeros(N**2, N**2)
+start = time.time()
+W = zeros((2*N)**2, (2*N)**2)
 
 for i in range(len(result)):
 
-    for j in range(len(result[i].args)):
+    newItem = result[i].as_coefficients_dict()
+    for key in newItem.keys():
 
-        print(result[i].args[j].args)
         for k in range(len(cVec)):
 
-            if abs(result[i].args[j]) == abs(cVec[k]):
+            if key == cVec[k]:
 
-                print(True)
+                W[i, k] = newItem[key]
+
+end = time.time()
+wTime = end - start
