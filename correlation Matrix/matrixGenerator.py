@@ -35,6 +35,7 @@ def f(x, y):
     return a ** y
 
 
+# Create A = [I, a, a**2, ..., a**N]
 A = Matrix(1, N, f)
 
 
@@ -42,12 +43,14 @@ def g(x, y):
     return ad ** x
 
 
+# Create A = [I, ad, ad**2, ..., ad**N]
 Ad = Matrix(N, 1, g)
 
 Alpha = Ad * A
 
 C = normal_ordered_form(TensorProduct(Sigma, Alpha))
 
+# To vectorize matrix C
 cVec = []
 k = 0
 for i in range(2*N):

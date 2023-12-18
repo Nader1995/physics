@@ -32,11 +32,17 @@ s = pauli.SigmaPlus()      # s = sMinus = sigma
 # Define J-C Hamiltonian
 HJC = ad * s + a * sd       # sympy.I = √ (-1) = i
 
+start = time.time()
+
+# Calculate Heisenberg Equation with Jaynes-Cummings Hamiltonian
 preResult = []
 for i in range(len(cVec)):
 
     eta = Commutator(HJC, cVec[i])
     preResult.append(normal_ordered_form(eta.doit().expand()))       # eta in the (separated) expanded form
+
+end = time.time()
+commuteTime = end - start
 
 # ==============================================================
 # Stage I: cleaning the correlation matrix of all unwanted terms
@@ -47,7 +53,9 @@ for i in range(len(cVec)):
     newElement = 0
     for j in range(len(preResult[i].args)):
 
+        # To keep all elements and them eliminate higher order terms
         newElement = newElement + preResult[i].args[j]
+        # To eliminate unwanted order of sigma
         createdElement = 1
         for k in range(len(preResult[i].args[j].args)):
 
@@ -83,6 +91,7 @@ W = zeros((2*N)**2, (2*N)**2)
 
 for i in range(len(result)):
 
+    # Keep each element of result as dictionary of 'term': coefficient to extract coefficient and store in W
     newItem = result[i].as_coefficients_dict()
     for key in newItem.keys():
 
