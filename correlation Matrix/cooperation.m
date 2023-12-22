@@ -1,8 +1,7 @@
 
-
 % *********************************************** 
 % *                                             *
-% * 16 December, 2023                           *
+% * 19 December, 2023                           *
 % * TED College                                 *
 % * Python-MatLab Cooperation                   *
 % *                                             *
@@ -12,7 +11,7 @@
 % * of qubit-cavity system                      *
 % * For "Jaynes-Cummings Hamiltonian"           *
 % *                                             *
-% * We find W usin the python code, and         *
+% * We find W using the python code, and        *
 % * import it here                              *
 % *                                             *
 % ***********************************************
@@ -25,12 +24,15 @@ hold on ;
 W = load('W.mat', '-ASCII') ;
 N = load('N.mat', '-ASCII') ;
 
+% To increase the speed of computation
+wSparse = sparse(W) ;
+
 % =======================================================================
 % Constants:
 
-T = 10 * pi ;            % Totoal Time, (2 * pi) for a complete rotation 
+T = 5 * pi ;            % Totoal Time, (2 * pi) for a complete rotation 
 step = 1/32 ;           % Powers of 2 : 16, 32, 64, ...
-alpha = 4 ;
+alpha = 3 ;             % Degree of coherency
 
 dimension = N ;        % Dimension of bosonic subspace
 qDimension = 2 ;        % Dimension of qubit subspace  
@@ -96,8 +98,10 @@ coherentState = ketAlpha * ketAlpha' ;
 
 qState = qKetZero * qKetZero' ;
 state = coherentState;
+
 % =======================================================================
-% Initial values
+% In the beginning matrices are uncorrelated: kron(S, Ad*A)
+% Initial value of matrix S
 
 S = zeros(2, 2) ;
 
@@ -106,6 +110,7 @@ S(1, 2) = trace(qState * sigma) ;
 S(2, 1) = trace(qState * sigmad) ;
 S(2, 2) = trace(qState * sigmad * sigma) ;
 
+% Initial value of matrix Ad*A
 Ad = cell(N, 1) ;
 
 for i=1:N
@@ -134,9 +139,9 @@ C = zeros(N, N) ;
 for i=1:N
     for j=1:N
         
-%         C(i, j) = trace(state * AdA{i,j}) ;
-%         When we are having coherent State
-        C(i, j) = trace(state * AdA{i,j})/(alpha^2) ;
+        C(i, j) = trace(state * AdA{i,j}) ;
+%         When we are having a coherent State
+%         C(i, j) = trace(state * AdA{i,j})/(alpha^2) ;
         
     end
 end
@@ -144,22 +149,24 @@ end
 % ==================================================
 % Vectorization made easy
 
-coMatrix = kron(S, C) ;
+coMatrix = kron(S, C) ;         % coMatrix: correlation Matrix
 coMatrixTrans = coMatrix' ;
 coVector = coMatrixTrans(:) ;
 
 % ======================================================================
 % Main: Integral Method
 
-Time = 0 : step : T ;   % total steps, we need this in our plot
+% Time = 1 : step : T ;   % total steps, we need this in our plot
 
 resultC = zeros(round((1/step) * T), 1) ;     % C2 is stored here
-  
-counter = 1 ;
-  
-for time = 0:step:T
    
-   co = expm(1i * W * time) ;
+% parallel for: accepts integer and the number of threads
+parfor (counter = 1: round((1/step) * T), 12)
+   
+   % Turn integer counter into time 
+   time = counter * step ;
+   
+   co = expm(1i * wSparse * time) ;
    result = co * coVector ;
    
    resultC(counter, 1) = result(2*N + 2, 1) + result(2 * N^2 + 3*N + 2, 1) ; 
@@ -170,14 +177,12 @@ for time = 0:step:T
    disp("I am here: ");
    disp(counter);
     
-   counter = counter + 1;
-    
 end
 
 % =======================================================================
 % Plot the Result                         
 
-plot(Time, real(resultC));
+plot(real(resultC));
 
 elapsed_Time = toc ;
 disp('Run Iime (minute):') ;

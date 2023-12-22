@@ -1,3 +1,4 @@
+from multiprocessing import Pool
 import sympy as sp
 import numpy as np
 import sys
@@ -31,11 +32,12 @@ s = pauli.SigmaPlus()      # s = sMinus = sigma
 # Define J-C Hamiltonian
 HJC = sp.I * (ad * s + a * sd)       # sympy.I = √ (-1) = i
 
-eta = Commutator(HJC, a * s)
+eta = Commutator(HJC, ad ** 6 * a ** 6 * sd * s)
 
 # complete form: pauli.qsimplify_pauli(normal_ordered_form(eta.doit().expand()))
 new = normal_ordered_form(eta.doit().expand())
 
+print(new)
 # print(new)
 # print(new.args[1].args[1])
 # print(normal_ordered_form(new.args[1] / (sp.I * a * s * sd)))
@@ -44,9 +46,9 @@ new = normal_ordered_form(eta.doit().expand())
 
 # print(np.real(np.absolute(new.args[1])))
 
-term = 0
-term = new.args[1]
-anotherTerm = new.args[1].as_coefficients_dict()
+# term = 0
+# term = new.args[1]
+# anotherTerm = new.args[1].as_coefficients_dict()
 # print(term * anotherTerm.values())
 # print(new.args[1])
 # print(anotherTerm.values())
@@ -54,7 +56,17 @@ anotherTerm = new.args[1].as_coefficients_dict()
 # for i in anotherTerm.keys():
 #     print(i)
 
-basic = BosonFockKet(1)
+# basic = BosonFockKet(1)
 # print(qapply(s * JzKet(1, 1)))
 
-print(sys.path)
+# print(sys.path)
+
+
+def f(x):
+    return x*x
+
+
+with Pool(5) as p:
+    result = p.map(f, [1, 2, 3])
+
+print(result)
